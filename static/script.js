@@ -21,9 +21,9 @@ function showToast(msg, type = 'success') {
 
 /* ─── Add Song ──────────────────────────────────── */
 function addSong() {
-  const titleEl  = document.getElementById('title');
+  const titleEl = document.getElementById('title');
   const artistEl = document.getElementById('artist');
-  const urlEl    = document.getElementById('url');
+  const urlEl = document.getElementById('url');
 
   if (!titleEl.value.trim() || !artistEl.value.trim() || !urlEl.value.trim()) {
     showToast('Please fill in all fields.', 'error');
@@ -38,30 +38,30 @@ function addSong() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      title:  titleEl.value.trim(),
+      title: titleEl.value.trim(),
       artist: artistEl.value.trim(),
-      url:    urlEl.value.trim()
+      url: urlEl.value.trim()
     })
   })
-  .then(res => res.json())
-  .then(d => {
-    showToast('✓ ' + d.message, 'success');
-    titleEl.value  = '';
-    artistEl.value = '';
-    urlEl.value    = '';
-    // Switch to library so user can see their new song
-    switchTab('library');
-  })
-  .catch(() => showToast('Failed to add song.', 'error'))
-  .finally(() => {
-    btn.disabled = false;
-    btn.innerHTML = '<span class="btn-icon">＋</span> Add to Library';
-  });
+    .then(res => res.json())
+    .then(d => {
+      showToast('✓ ' + d.message, 'success');
+      titleEl.value = '';
+      artistEl.value = '';
+      urlEl.value = '';
+      // Switch to library so user can see their new song
+      switchTab('library');
+    })
+    .catch(() => showToast('Failed to add song.', 'error'))
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="btn-icon">＋</span> Add to Library';
+    });
 }
 
 /* ─── Search ────────────────────────────────────── */
 function searchSong() {
-  const q   = document.getElementById('search').value.trim();
+  const q = document.getElementById('search').value.trim();
   const btn = document.getElementById('search-btn');
   const resultDiv = document.getElementById('result');
 
@@ -72,22 +72,22 @@ function searchSong() {
   resultDiv.innerHTML = '';
 
   fetch(`/search?q=${encodeURIComponent(q)}`)
-  .then(res => res.json())
-  .then(data => {
-    if (data.length === 0) {
-      resultDiv.innerHTML = `
+    .then(res => res.json())
+    .then(data => {
+      if (data.length === 0) {
+        resultDiv.innerHTML = `
         <div class="empty-state">
           <div class="es-icon">🔇</div>
           <p>No songs found for "<strong>${escHtml(q)}</strong>"</p>
         </div>`;
-      return;
-    }
-    data.forEach(song => {
-      resultDiv.appendChild(buildSongCard(song, true));
-    });
-  })
-  .catch(() => showToast('Search failed.', 'error'))
-  .finally(() => { btn.disabled = false; btn.textContent = 'Search'; });
+        return;
+      }
+      data.forEach(song => {
+        resultDiv.appendChild(buildSongCard(song, true));
+      });
+    })
+    .catch(() => showToast('Search failed.', 'error'))
+    .finally(() => { btn.disabled = false; btn.textContent = 'Search'; });
 }
 
 /* ─── Library ───────────────────────────────────── */
@@ -96,27 +96,27 @@ function loadLibrary() {
   libraryDiv.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div><p>Loading…</p></div>`;
 
   fetch('/library')
-  .then(res => res.json())
-  .then(data => {
-    libraryDiv.innerHTML = '';
+    .then(res => res.json())
+    .then(data => {
+      libraryDiv.innerHTML = '';
 
-    // Update count badge
-    const badge = document.getElementById('library-count');
-    if (badge) badge.textContent = data.length;
+      // Update count badge
+      const badge = document.getElementById('library-count');
+      if (badge) badge.textContent = data.length;
 
-    if (data.length === 0) {
-      libraryDiv.innerHTML = `
+      if (data.length === 0) {
+        libraryDiv.innerHTML = `
         <div class="empty-state">
           <div class="es-icon">🎵</div>
           <p>Your library is empty.<br>Add a song to get started!</p>
         </div>`;
-      return;
-    }
-    data.forEach(song => {
-      libraryDiv.appendChild(buildSongCard(song, false));
-    });
-  })
-  .catch(() => showToast('Could not load library.', 'error'));
+        return;
+      }
+      data.forEach(song => {
+        libraryDiv.appendChild(buildSongCard(song, false));
+      });
+    })
+    .catch(() => showToast('Could not load library.', 'error'));
 }
 
 /* ─── Build song card ───────────────────────────── */
@@ -137,13 +137,6 @@ function buildSongCard(song, showFav = false) {
         ${song.fav ? '✅' : '♡'}
        </button>`
     : '';
-  const manageBtns = !showFav
-    ? `
-      <button class="btn-icon-sm edit-btn" title="Edit"
-        onclick="openEditModal(${song.id}, '${escAttr(song.title)}', '${escAttr(song.artist || '')}', '${escAttr(song.url || '')}')">✏</button>
-      <button class="btn-icon-sm delete-btn" title="Delete" onclick="deleteSong(${song.id})">🗑</button>
-    `
-    : '';
 
   div.innerHTML = `
     <div class="song-thumb">${thumbHtml}</div>
@@ -155,7 +148,6 @@ function buildSongCard(song, showFav = false) {
       <button class="btn-icon-sm play-btn" title="Play"
         onclick="playYouTube('${escAttr(song.url)}', '${escAttr(song.title)}', '${escAttr(song.artist || '')}')">▶</button>
       ${favBtn}
-      ${manageBtns}
     </div>
   `;
   return div;
@@ -174,7 +166,7 @@ function playYouTube(link, title = '', artist = '') {
   // Update now-playing info
   const info = document.getElementById('now-playing-info');
   if (title) {
-    document.getElementById('np-title').textContent  = title;
+    document.getElementById('np-title').textContent = title;
     document.getElementById('np-artist').textContent = artist || '—';
     info.classList.remove('hidden');
 
@@ -194,81 +186,18 @@ function playYouTube(link, title = '', artist = '') {
 function fav(id, btn) {
   if (btn) { btn.disabled = true; btn.textContent = '✅'; }
   fetch(`/favorite/${id}`)
-  .then(() => showToast('♥ Marked as favourite!', 'success'))
-  .catch(() => {
-    showToast('Failed.', 'error');
-    if (btn) { btn.disabled = false; btn.textContent = '♡'; }
-  });
-}
-
-/* ─── Edit modal + update song ───────────────────── */
-function openEditModal(id, title, artist, url) {
-  document.getElementById('edit-id').value = id;
-  document.getElementById('edit-title').value = title;
-  document.getElementById('edit-artist').value = artist;
-  document.getElementById('edit-url').value = url;
-  document.getElementById('edit-modal').classList.add('show');
-}
-
-function closeEditModal() {
-  document.getElementById('edit-modal').classList.remove('show');
-}
-
-function closeModal(event) {
-  if (event.target.id === 'edit-modal') {
-    closeEditModal();
-  }
-}
-
-function submitEdit() {
-  const id = document.getElementById('edit-id').value;
-  const title = document.getElementById('edit-title').value.trim();
-  const artist = document.getElementById('edit-artist').value.trim();
-  const url = document.getElementById('edit-url').value.trim();
-
-  if (!title || !artist || !url) {
-    showToast('Please fill in all edit fields.', 'error');
-    return;
-  }
-
-  fetch(`/update/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, artist, url })
-  })
-    .then(res => {
-      if (!res.ok) throw new Error('Update failed');
-      return res.json();
-    })
-    .then(d => {
-      showToast(d.message || 'Song updated successfully', 'success');
-      closeEditModal();
-      loadLibrary();
-    })
-    .catch(() => showToast('Failed to update song.', 'error'));
-}
-
-/* ─── Delete song ───────────────────────────────── */
-function deleteSong(id) {
-  if (!confirm('Delete this song from your library?')) return;
-
-  fetch(`/delete/${id}`, { method: 'DELETE' })
-    .then(res => {
-      if (!res.ok) throw new Error('Delete failed');
-      return res.json();
-    })
-    .then(d => {
-      showToast(d.message || 'Song deleted successfully', 'success');
-      loadLibrary();
-    })
-    .catch(() => showToast('Failed to delete song.', 'error'));
+    .then(() => showToast('♥ Marked as favourite!', 'success'))
+    .catch(() => {
+      showToast('Failed.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '♡'; }
+    });
 }
 
 /* ─── Extract YouTube ID ─────────────────────────── */
 function extractYouTubeId(link) {
   if (!link) return '';
-  if (link.includes('watch?v='))            return link.split('watch?v=')[1].split('&')[0];
-  if (link.includes('youtu.be/'))           return link.split('youtu.be/')[1].split('?')[0];
+  if (link.includes('watch?v=')) return link.split('watch?v=')[1].split('&')[0];
+  if (link.includes('youtu.be/')) return link.split('youtu.be/')[1].split('?')[0];
   if (link.includes('youtube.com/shorts/')) return link.split('youtube.com/shorts/')[1].split('?')[0];
   return '';
 }
@@ -284,8 +213,42 @@ function escHtml(s) {
 function escAttr(s) {
   return String(s).replace(/'/g, "\\'");
 }
+// DELETE a song
+async function deleteSong(id) {
+  if (!confirm("Delete this song?")) return;
+  const res = await fetch(`/delete/${id}`, { method: "DELETE" });
+  const data = await res.json();
+  alert(data.message);
+  loadLibrary(); // refresh the list
+}
 
-/* ─── Initial load ──────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
-  loadLibrary();
-});
+// Open edit form pre-filled with current song data
+function openEditModal(id, title, artist, url) {
+  document.getElementById("edit-id").value = id;
+  document.getElementById("edit-title").value = title;
+  document.getElementById("edit-artist").value = artist;
+  document.getElementById("edit-url").value = url;
+  document.getElementById("edit-modal").style.display = "flex";
+}
+
+function closeEditModal() {
+  document.getElementById("edit-modal").style.display = "none";
+}
+
+// SUBMIT the update
+async function submitUpdate() {
+  const id = document.getElementById("edit-id").value;
+  const title = document.getElementById("edit-title").value;
+  const artist = document.getElementById("edit-artist").value;
+  const url = document.getElementById("edit-url").value;
+
+  const res = await fetch(`/update/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, artist, url })
+  });
+  const data = await res.json();
+  alert(data.message);
+  closeEditModal();
+  loadLibrary(); // refresh the list
+}
