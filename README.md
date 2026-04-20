@@ -104,4 +104,15 @@ Then open your browser at **http://127.0.0.1:5000**
 
 - The database file (`instance/music.db`) is excluded from version control via `.gitignore` (recommended)
 - The app runs in debug mode by default — disable this before any production deployment by setting `debug=False` in `app.py`
- MADE BY ADITYA WADHAWAN  2401010023
+
+ 
+ 
+ MADE BY ADITYA WADHAWAN
+ 
+ 2401010023
+
+
+SECTION - A
+
+
+ BTECH CSE CORE
