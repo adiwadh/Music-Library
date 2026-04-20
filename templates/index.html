@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SoundVault – Add, search, edit and manage your YouTube music library." />
+  <title>SoundVault – Music Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+
+  <!-- ── Toast notification ─────────────────────────────── -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <!-- ── Edit Modal ─────────────────────────────────────── -->
+  <div id="edit-modal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
+      <div class="modal-header">
+        <h3 id="modal-heading" class="modal-title">✏️ Edit Song</h3>
+        <button class="modal-close" onclick="closeEditModal()" title="Close">✕</button>
+      </div>
+      <input type="hidden" id="edit-id" />
+      <div class="form-group">
+        <label for="edit-title">Song Title</label>
+        <input id="edit-title" type="text" placeholder="Song title" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="edit-artist">Artist</label>
+        <input id="edit-artist" type="text" placeholder="Artist name" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="edit-url">YouTube URL</label>
+        <input id="edit-url" type="url" placeholder="https://youtube.com/watch?v=..." autocomplete="off" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary-sm" onclick="submitEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Animated background blobs ─────────────────────── -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- ── Top nav ─────────────────────────────────────────── -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <span class="nav-icon">🎵</span>
+      <span class="nav-title">Sound<span>Vault</span></span>
+    </div>
+    <nav class="nav-tabs" role="navigation" aria-label="Main navigation">
+      <button class="tab-btn active" id="tab-add"     onclick="switchTab('add')">Add Song</button>
+      <button class="tab-btn"        id="tab-search"  onclick="switchTab('search')">Search</button>
+      <button class="tab-btn"        id="tab-library" onclick="switchTab('library')">
+        Library <span class="count-badge" id="library-count">0</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ── Main layout ──────────────────────────────────────── -->
+  <main class="main-layout">
+
+    <!-- LEFT: panels -->
+    <section class="panels">
+
+      <!-- ADD SONG panel -->
+      <div class="panel" id="panel-add">
+        <div class="panel-header">
+          <div class="panel-icon">＋</div>
+          <div>
+            <h2 class="panel-title">Add a Song</h2>
+            <p class="panel-sub">Paste a YouTube link to save it to your library</p>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="title">Song Title</label>
+          <input id="title" type="text" placeholder="e.g. Blinding Lights" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label for="artist">Artist</label>
+          <input id="artist" type="text" placeholder="e.g. The Weeknd" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label for="url">YouTube URL</label>
+          <input id="url" type="url" placeholder="https://youtube.com/watch?v=..." autocomplete="off"
+                 onkeydown="if(event.key==='Enter') addSong()" />
+        </div>
+        <button class="btn btn-primary" onclick="addSong()" id="add-song-btn">
+          <span class="btn-icon">＋</span> Add to Library
+        </button>
+      </div>
+
+      <!-- SEARCH panel -->
+      <div class="panel hidden" id="panel-search">
+        <div class="panel-header">
+          <div class="panel-icon">🔍</div>
+          <div>
+            <h2 class="panel-title">Search Songs</h2>
+            <p class="panel-sub">Find by title or artist</p>
+          </div>
+        </div>
+        <div class="search-bar">
+          <input id="search" type="text" placeholder="Search your library…" autocomplete="off"
+                 onkeydown="if(event.key==='Enter') searchSong()" />
+          <button class="btn btn-search" onclick="searchSong()" id="search-btn">Search</button>
+        </div>
+        <div id="result" class="song-list" aria-live="polite"></div>
+      </div>
+
+      <!-- LIBRARY panel -->
+      <div class="panel hidden" id="panel-library">
+        <div class="panel-header">
+          <div class="panel-icon">🎶</div>
+          <div>
+            <h2 class="panel-title">Your Library</h2>
+            <p class="panel-sub">All your saved songs — play, edit, or delete</p>
+          </div>
+        </div>
+        <div id="library" class="song-list" aria-live="polite">
+          <div class="empty-state">
+            <div class="es-icon">🎵</div>
+            <p>Your library is empty.<br>Add a song to get started!</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT: player -->
+    <aside class="player-section">
+      <div class="player-card">
+        <div class="player-header">
+          <span class="player-label">Now Playing</span>
+          <span class="player-dots">
+            <span></span><span></span><span></span>
+          </span>
+        </div>
+        <div class="player-art" id="player-art">
+          <div class="art-placeholder">
+            <div class="music-note-anim">🎶</div>
+            <p>Select a song to play</p>
+          </div>
+        </div>
+        <div id="now-playing-info" class="now-playing-info hidden">
+          <p class="np-title" id="np-title">—</p>
+          <p class="np-artist" id="np-artist">—</p>
+        </div>
+        <div class="player-bar">
+          <div class="player-bar-fill idle" id="player-bar-fill"></div>
+        </div>
+        <div class="iframe-wrap">
+          <iframe id="ytplayer"
+                  width="100%"
+                  height="220"
+                  src=""
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                  title="YouTube player">
+          </iframe>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
