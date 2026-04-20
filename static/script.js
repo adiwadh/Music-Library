@@ -138,6 +138,14 @@ function buildSongCard(song, showFav = false) {
        </button>`
     : '';
 
+  const editBtn = !showFav
+    ? `<button class="btn-icon-sm edit-btn" title="Edit song" onclick="openEditModal('${song.id}', '${escAttr(song.title)}', '${escAttr(song.artist || '')}', '${escAttr(song.url || '')}')">✎</button>`
+    : '';
+
+  const deleteBtn = !showFav
+    ? `<button class="btn-icon-sm delete-btn" title="Delete song" onclick="deleteSong(${song.id})">🗑</button>`
+    : '';
+
   div.innerHTML = `
     <div class="song-thumb">${thumbHtml}</div>
     <div class="song-info">
@@ -148,6 +156,8 @@ function buildSongCard(song, showFav = false) {
       <button class="btn-icon-sm play-btn" title="Play"
         onclick="playYouTube('${escAttr(song.url)}', '${escAttr(song.title)}', '${escAttr(song.artist || '')}')">▶</button>
       ${favBtn}
+      ${editBtn}
+      ${deleteBtn}
     </div>
   `;
   return div;
@@ -161,7 +171,7 @@ function playYouTube(link, title = '', artist = '') {
   if (!videoId) { showToast('Invalid YouTube link.', 'error'); return; }
 
   document.getElementById('ytplayer').src =
-    `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
 
   // Update now-playing info
   const info = document.getElementById('now-playing-info');
@@ -196,9 +206,19 @@ function fav(id, btn) {
 /* ─── Extract YouTube ID ─────────────────────────── */
 function extractYouTubeId(link) {
   if (!link) return '';
-  if (link.includes('watch?v=')) return link.split('watch?v=')[1].split('&')[0];
-  if (link.includes('youtu.be/')) return link.split('youtu.be/')[1].split('?')[0];
-  if (link.includes('youtube.com/shorts/')) return link.split('youtube.com/shorts/')[1].split('?')[0];
+  const url = link.trim();
+  const patterns = [
+    /youtu\.be\/([^?&\/]+)/,
+    /youtube\.com\/watch\?v=([^?&\/]+)/,
+    /youtube\.com\/embed\/([^?&\/]+)/,
+    /youtube\.com\/v\/([^?&\/]+)/,
+    /youtube\.com\/shorts\/([^?&\/]+)/
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) return match[1];
+  }
   return '';
 }
 
@@ -211,15 +231,32 @@ function escHtml(s) {
     .replace(/"/g, '&quot;');
 }
 function escAttr(s) {
-  return String(s).replace(/'/g, "\\'");
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, "\\'");
 }
+
+function closeModal(event) {
+  if (event.target.id === 'edit-modal') {
+    closeEditModal();
+  }
+}
+
 // DELETE a song
 async function deleteSong(id) {
   if (!confirm("Delete this song?")) return;
-  const res = await fetch(`/delete/${id}`, { method: "DELETE" });
-  const data = await res.json();
-  alert(data.message);
-  loadLibrary(); // refresh the list
+
+  try {
+    const res = await fetch(`/delete/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    showToast(data.message, 'success');
+    loadLibrary(); // refresh the list
+  } catch (error) {
+    showToast('Delete failed.', 'error');
+  }
 }
 
 // Open edit form pre-filled with current song data
@@ -242,13 +279,17 @@ async function submitUpdate() {
   const artist = document.getElementById("edit-artist").value;
   const url = document.getElementById("edit-url").value;
 
-  const res = await fetch(`/update/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, artist, url })
-  });
-  const data = await res.json();
-  alert(data.message);
-  closeEditModal();
-  loadLibrary(); // refresh the list
+  try {
+    const res = await fetch(`/update/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, artist, url })
+    });
+    const data = await res.json();
+    showToast(data.message, 'success');
+    closeEditModal();
+    loadLibrary(); // refresh the list
+  } catch (error) {
+    showToast('Update failed.', 'error');
+  }
 }
