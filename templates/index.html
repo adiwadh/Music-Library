@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="SoundVault – Add, search, edit and manage your YouTube music library." />
   <title>SoundVault – Music Library</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
+
 <body>
 
   <!-- ── Toast notification ─────────────────────────────── -->
@@ -53,9 +56,9 @@
       <span class="nav-title">Sound<span>Vault</span></span>
     </div>
     <nav class="nav-tabs" role="navigation" aria-label="Main navigation">
-      <button class="tab-btn active" id="tab-add"     onclick="switchTab('add')">Add Song</button>
-      <button class="tab-btn"        id="tab-search"  onclick="switchTab('search')">Search</button>
-      <button class="tab-btn"        id="tab-library" onclick="switchTab('library')">
+      <button class="tab-btn active" id="tab-add" onclick="switchTab('add')">Add Song</button>
+      <button class="tab-btn" id="tab-search" onclick="switchTab('search')">Search</button>
+      <button class="tab-btn" id="tab-library" onclick="switchTab('library')">
         Library <span class="count-badge" id="library-count">0</span>
       </button>
     </nav>
@@ -87,7 +90,7 @@
         <div class="form-group">
           <label for="url">YouTube URL</label>
           <input id="url" type="url" placeholder="https://youtube.com/watch?v=..." autocomplete="off"
-                 onkeydown="if(event.key==='Enter') addSong()" />
+            onkeydown="if(event.key==='Enter') addSong()" />
         </div>
         <button class="btn btn-primary" onclick="addSong()" id="add-song-btn">
           <span class="btn-icon">＋</span> Add to Library
@@ -105,7 +108,7 @@
         </div>
         <div class="search-bar">
           <input id="search" type="text" placeholder="Search your library…" autocomplete="off"
-                 onkeydown="if(event.key==='Enter') searchSong()" />
+            onkeydown="if(event.key==='Enter') searchSong()" />
           <button class="btn btn-search" onclick="searchSong()" id="search-btn">Search</button>
         </div>
         <div id="result" class="song-list" aria-live="polite"></div>
@@ -153,14 +156,9 @@
           <div class="player-bar-fill idle" id="player-bar-fill"></div>
         </div>
         <div class="iframe-wrap">
-          <iframe id="ytplayer"
-                  width="100%"
-                  height="220"
-                  src=""
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowfullscreen
-                  title="YouTube player">
+          <iframe id="ytplayer" width="100%" height="220" src="" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen title="YouTube player">
           </iframe>
         </div>
       </div>
@@ -170,4 +168,5 @@
 
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
+
 </html>

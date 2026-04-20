@@ -137,6 +137,13 @@ function buildSongCard(song, showFav = false) {
         ${song.fav ? '✅' : '♡'}
        </button>`
     : '';
+  const manageBtns = !showFav
+    ? `
+      <button class="btn-icon-sm edit-btn" title="Edit"
+        onclick="openEditModal(${song.id}, '${escAttr(song.title)}', '${escAttr(song.artist || '')}', '${escAttr(song.url || '')}')">✏</button>
+      <button class="btn-icon-sm delete-btn" title="Delete" onclick="deleteSong(${song.id})">🗑</button>
+    `
+    : '';
 
   div.innerHTML = `
     <div class="song-thumb">${thumbHtml}</div>
@@ -148,6 +155,7 @@ function buildSongCard(song, showFav = false) {
       <button class="btn-icon-sm play-btn" title="Play"
         onclick="playYouTube('${escAttr(song.url)}', '${escAttr(song.title)}', '${escAttr(song.artist || '')}')">▶</button>
       ${favBtn}
+      ${manageBtns}
     </div>
   `;
   return div;
@@ -193,6 +201,69 @@ function fav(id, btn) {
   });
 }
 
+/* ─── Edit modal + update song ───────────────────── */
+function openEditModal(id, title, artist, url) {
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-title').value = title;
+  document.getElementById('edit-artist').value = artist;
+  document.getElementById('edit-url').value = url;
+  document.getElementById('edit-modal').classList.add('show');
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('show');
+}
+
+function closeModal(event) {
+  if (event.target.id === 'edit-modal') {
+    closeEditModal();
+  }
+}
+
+function submitEdit() {
+  const id = document.getElementById('edit-id').value;
+  const title = document.getElementById('edit-title').value.trim();
+  const artist = document.getElementById('edit-artist').value.trim();
+  const url = document.getElementById('edit-url').value.trim();
+
+  if (!title || !artist || !url) {
+    showToast('Please fill in all edit fields.', 'error');
+    return;
+  }
+
+  fetch(`/update/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, artist, url })
+  })
+    .then(res => {
+      if (!res.ok) throw new Error('Update failed');
+      return res.json();
+    })
+    .then(d => {
+      showToast(d.message || 'Song updated successfully', 'success');
+      closeEditModal();
+      loadLibrary();
+    })
+    .catch(() => showToast('Failed to update song.', 'error'));
+}
+
+/* ─── Delete song ───────────────────────────────── */
+function deleteSong(id) {
+  if (!confirm('Delete this song from your library?')) return;
+
+  fetch(`/delete/${id}`, { method: 'DELETE' })
+    .then(res => {
+      if (!res.ok) throw new Error('Delete failed');
+      return res.json();
+    })
+    .then(d => {
+      showToast(d.message || 'Song deleted successfully', 'success');
+      loadLibrary();
+    })
+    .catch(() => showToast('Failed to delete song.', 'error'));
+}
+
 /* ─── Extract YouTube ID ─────────────────────────── */
 function extractYouTubeId(link) {
   if (!link) return '';
@@ -213,3 +284,8 @@ function escHtml(s) {
 function escAttr(s) {
   return String(s).replace(/'/g, "\\'");
 }
+
+/* ─── Initial load ──────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadLibrary();
+});
