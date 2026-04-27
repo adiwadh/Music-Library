@@ -52,8 +52,7 @@ function addSong() {
       titleEl.value = '';
       artistEl.value = '';
       urlEl.value = '';
-      // Switch to library so user can see their new song
-      switchTab('library');
+      loadLibrary();
     })
     .catch(() => showToast('Failed to add song.', 'error'))
     .finally(() => {
