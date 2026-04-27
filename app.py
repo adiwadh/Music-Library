@@ -4,20 +4,37 @@ from database import get_db, create_tables
 app = Flask(__name__)
 create_tables()
 
+# ---------------------------------------------------------------------------
+# Helper
+# ---------------------------------------------------------------------------
+
+def _sql_literal(value):
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
+
 @app.route("/")
 def home():
     return render_template("index.html")
 
+
 @app.route("/add_song", methods=["POST"])
 def add_song():
     data = request.json
-    db = get_db()
-    sql = "INSERT INTO songs (title, artist, url) VALUES (?, ?, ?)"
+    conn = get_db()
+    cursor = conn.cursor()
+
+    sql = "INSERT INTO songs (title, artist, url) VALUES (%s, %s, %s)"
     params = (data["title"], data["artist"], data["url"])
-    cursor = db.execute(sql, params)
+    cursor.execute(sql, params)
     new_id = cursor.lastrowid
-    db.commit()
-    db.close()
+    conn.commit()
+    cursor.close()
+    conn.close()
+
     return jsonify({
         "message": "Song added successfully",
         "id": new_id,
@@ -29,92 +46,112 @@ def add_song():
         )
     })
 
-def _sql_literal(value):
-    return "'" + str(value).replace("'", "''") + "'"
 
 @app.route("/search")
 def search():
-    q = request.args.get("q")
-    db = get_db()
-    rows = db.execute(
-        "SELECT * FROM songs WHERE title LIKE ? OR artist LIKE ?",
+    q = request.args.get("q", "")
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT * FROM songs WHERE title LIKE %s OR artist LIKE %s",
         (f"%{q}%", f"%{q}%")
-    ).fetchall()
-    db.close()
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
 
     return jsonify([
-        {
-            "id": r[0],
-            "title": r[1],
-            "artist": r[2],
-            "url": r[3],
-            "fav": r[4]
-        }
+        {"id": r[0], "title": r[1], "artist": r[2], "url": r[3], "fav": r[4]}
         for r in rows
     ])
 
+
 @app.route("/favorite/<int:id>")
 def favorite(id):
-    db = get_db()
-    row = db.execute("SELECT is_favorite FROM songs WHERE id = ?", (id,)).fetchone()
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT is_favorite FROM songs WHERE id = %s", (id,))
+    row = cursor.fetchone()
     if row is None:
-        db.close()
+        cursor.close()
+        conn.close()
         return jsonify({"message": "Song not found"}), 404
 
     new_value = 0 if row[0] else 1
-    db.execute("UPDATE songs SET is_favorite = ? WHERE id = ?", (new_value, id))
-    db.commit()
-    db.close()
+    cursor.execute("UPDATE songs SET is_favorite = %s WHERE id = %s", (new_value, id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
     return jsonify({
         "message": "Added to favourites" if new_value else "Removed from favourites",
         "fav": new_value
     })
 
+
 @app.route("/favorites")
 def favorites():
-    db = get_db()
-    rows = db.execute(
-        "SELECT * FROM songs WHERE is_favorite = 1 ORDER BY id DESC"
-    ).fetchall()
-    db.close()
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM songs WHERE is_favorite = 1 ORDER BY id DESC")
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
 
     return jsonify([
         {"id": r[0], "title": r[1], "artist": r[2], "url": r[3], "fav": r[4]}
         for r in rows
     ])
+
 
 @app.route("/library")
 def library():
-    db = get_db()
-    rows = db.execute(
-        "SELECT * FROM songs ORDER BY id DESC"
-    ).fetchall()
-    db.close()
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM songs ORDER BY id DESC")
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
 
     return jsonify([
         {"id": r[0], "title": r[1], "artist": r[2], "url": r[3], "fav": r[4]}
         for r in rows
     ])
 
+
 @app.route("/delete/<int:id>", methods=["DELETE"])
 def delete_song(id):
-    db = get_db()
-    db.execute("DELETE FROM songs WHERE id = ?", (id,))
-    db.commit()
-    db.close()
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM songs WHERE id = %s", (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
     return jsonify({"message": "Song deleted successfully"})
+
 
 @app.route("/update/<int:id>", methods=["PUT"])
 def update_song(id):
     data = request.json
-    db = get_db()
-    db.execute(
-        "UPDATE songs SET title = ?, artist = ?, url = ? WHERE id = ?",
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE songs SET title = %s, artist = %s, url = %s WHERE id = %s",
         (data["title"], data["artist"], data["url"], id)
     )
-    db.commit()
-    db.close()
+    conn.commit()
+    cursor.close()
+    conn.close()
+
     return jsonify({"message": "Song updated successfully"})
+
 
 if __name__ == "__main__":
     app.run(debug=True)
