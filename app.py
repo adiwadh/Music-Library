@@ -12,14 +12,25 @@ def home():
 def add_song():
     data = request.json
     db = get_db()
-    cursor = db.execute(
-        "INSERT INTO songs (title, artist, url) VALUES (?, ?, ?)",
-        (data["title"], data["artist"], data["url"])
-    )
+    sql = "INSERT INTO songs (title, artist, url) VALUES (?, ?, ?)"
+    params = (data["title"], data["artist"], data["url"])
+    cursor = db.execute(sql, params)
     new_id = cursor.lastrowid
     db.commit()
     db.close()
-    return jsonify({"message": "Song added successfully", "id": new_id})
+    return jsonify({
+        "message": "Song added successfully",
+        "id": new_id,
+        "sql": sql,
+        "params": params,
+        "display_sql": (
+            "INSERT INTO songs (title, artist, url) VALUES "
+            f"({_sql_literal(data['title'])}, {_sql_literal(data['artist'])}, {_sql_literal(data['url'])})"
+        )
+    })
+
+def _sql_literal(value):
+    return "'" + str(value).replace("'", "''") + "'"
 
 @app.route("/search")
 def search():
@@ -85,4 +96,3 @@ def update_song(id):
 
 if __name__ == "__main__":
     app.run(debug=True)
-

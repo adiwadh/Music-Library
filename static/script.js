@@ -45,6 +45,9 @@ function addSong() {
   })
     .then(res => res.json())
     .then(d => {
+      console.log('SQL:', d.sql);
+      console.log('Params:', d.params);
+      showSqlCommand(d.display_sql);
       showToast('✓ ' + d.message, 'success');
       titleEl.value = '';
       artistEl.value = '';
@@ -57,6 +60,15 @@ function addSong() {
       btn.disabled = false;
       btn.innerHTML = '<span class="btn-icon">＋</span> Add to Library';
     });
+}
+
+function showSqlCommand(sql) {
+  const output = document.getElementById('sql-output');
+  const command = document.getElementById('sql-command');
+  if (!output || !command || !sql) return;
+
+  command.textContent = sql;
+  output.classList.remove('hidden');
 }
 
 /* ─── Search ────────────────────────────────────── */

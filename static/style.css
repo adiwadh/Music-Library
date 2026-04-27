@@ -236,6 +236,32 @@ input:focus {
   transform: scale(1.02);
 }
 
+.sql-output {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: var(--radius-md);
+  background: #F2F0EA;
+}
+.sql-output.hidden { display: none; }
+.sql-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sql-output code {
+  display: block;
+  color: #191919;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 /* ── Search bar ──────────────────────────────── */
 .search-bar {
   display: flex;

@@ -4,7 +4,9 @@ import os
 def get_db():
     if not os.path.exists("instance"):
         os.mkdir("instance")
-    return sqlite3.connect("instance/music.db")
+    conn = sqlite3.connect("instance/music.db")
+    conn.set_trace_callback(print)
+    return conn
 
 def create_tables():
     db = get_db()
