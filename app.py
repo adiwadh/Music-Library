@@ -56,10 +56,32 @@ def search():
 @app.route("/favorite/<int:id>")
 def favorite(id):
     db = get_db()
-    db.execute("UPDATE songs SET is_favorite = 1 WHERE id = ?", (id,))
+    row = db.execute("SELECT is_favorite FROM songs WHERE id = ?", (id,)).fetchone()
+    if row is None:
+        db.close()
+        return jsonify({"message": "Song not found"}), 404
+
+    new_value = 0 if row[0] else 1
+    db.execute("UPDATE songs SET is_favorite = ? WHERE id = ?", (new_value, id))
     db.commit()
     db.close()
-    return jsonify({"message": "Added to Library"})
+    return jsonify({
+        "message": "Added to favourites" if new_value else "Removed from favourites",
+        "fav": new_value
+    })
+
+@app.route("/favorites")
+def favorites():
+    db = get_db()
+    rows = db.execute(
+        "SELECT * FROM songs WHERE is_favorite = 1 ORDER BY id DESC"
+    ).fetchall()
+    db.close()
+
+    return jsonify([
+        {"id": r[0], "title": r[1], "artist": r[2], "url": r[3], "fav": r[4]}
+        for r in rows
+    ])
 
 @app.route("/library")
 def library():

@@ -61,6 +61,9 @@
       <button class="tab-btn" id="tab-library" onclick="switchTab('library')">
         Library <span class="count-badge" id="library-count">0</span>
       </button>
+      <button class="tab-btn" id="tab-favorites" onclick="switchTab('favorites')">
+        Favorites <span class="count-badge" id="favorites-count">0</span>
+      </button>
     </nav>
   </header>
 
@@ -131,6 +134,23 @@
           <div class="empty-state">
             <div class="es-icon">🎵</div>
             <p>Your library is empty.<br>Add a song to get started!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAVORITES panel -->
+      <div class="panel hidden" id="panel-favorites">
+        <div class="panel-header">
+          <div class="panel-icon">♥</div>
+          <div>
+            <h2 class="panel-title">Favourite Songs</h2>
+            <p class="panel-sub">Songs you marked with a heart</p>
+          </div>
+        </div>
+        <div id="favorites" class="song-list" aria-live="polite">
+          <div class="empty-state">
+            <div class="es-icon">♡</div>
+            <p>No favourites yet.<br>Use the heart button on any song.</p>
           </div>
         </div>
       </div>

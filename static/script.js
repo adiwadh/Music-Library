@@ -1,6 +1,6 @@
 /* ─── Tab switching ─────────────────────────────── */
 function switchTab(tab) {
-  ['add', 'search', 'library'].forEach(t => {
+  ['add', 'search', 'library', 'favorites'].forEach(t => {
     document.getElementById(`panel-${t}`).classList.add('hidden');
     document.getElementById(`tab-${t}`).classList.remove('active');
   });
@@ -9,6 +9,7 @@ function switchTab(tab) {
 
   // Auto-load library when switching to that tab
   if (tab === 'library') loadLibrary();
+  if (tab === 'favorites') loadFavorites();
 }
 
 /* ─── Toast notification ────────────────────────── */
@@ -94,7 +95,7 @@ function searchSong() {
         return;
       }
       data.forEach(song => {
-        resultDiv.appendChild(buildSongCard(song, true));
+        resultDiv.appendChild(buildSongCard(song, 'search'));
       });
     })
     .catch(() => showToast('Search failed.', 'error'))
@@ -114,6 +115,10 @@ function loadLibrary() {
       // Update count badge
       const badge = document.getElementById('library-count');
       if (badge) badge.textContent = data.length;
+      const favoritesBadge = document.getElementById('favorites-count');
+      if (favoritesBadge) {
+        favoritesBadge.textContent = data.filter(song => Number(song.fav) === 1).length;
+      }
 
       if (data.length === 0) {
         libraryDiv.innerHTML = `
@@ -124,14 +129,41 @@ function loadLibrary() {
         return;
       }
       data.forEach(song => {
-        libraryDiv.appendChild(buildSongCard(song, false));
+        libraryDiv.appendChild(buildSongCard(song, 'library'));
       });
     })
     .catch(() => showToast('Could not load library.', 'error'));
 }
 
+function loadFavorites() {
+  const favoritesDiv = document.getElementById('favorites');
+  favoritesDiv.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div><p>Loading...</p></div>`;
+
+  fetch('/favorites')
+    .then(res => res.json())
+    .then(data => {
+      favoritesDiv.innerHTML = '';
+
+      const badge = document.getElementById('favorites-count');
+      if (badge) badge.textContent = data.length;
+
+      if (data.length === 0) {
+        favoritesDiv.innerHTML = `
+        <div class="empty-state">
+          <div class="es-icon">♡</div>
+          <p>No favourites yet.<br>Use the heart button on any song.</p>
+        </div>`;
+        return;
+      }
+      data.forEach(song => {
+        favoritesDiv.appendChild(buildSongCard(song, 'favorites'));
+      });
+    })
+    .catch(() => showToast('Could not load favourites.', 'error'));
+}
+
 /* ─── Build song card ───────────────────────────── */
-function buildSongCard(song, showFav = false) {
+function buildSongCard(song, context = 'library') {
   const div = document.createElement('div');
   div.className = 'song-card';
   div.setAttribute('data-id', song.id);
@@ -143,17 +175,16 @@ function buildSongCard(song, showFav = false) {
     thumbHtml = `<img src="https://img.youtube.com/vi/${vid}/default.jpg" alt="" loading="lazy" />`;
   }
 
-  const favBtn = showFav
-    ? `<button class="btn-icon-sm fav-btn" title="Save to Library" onclick="fav(${song.id}, this)">
-        ${song.fav ? '✅' : '♡'}
-       </button>`
-    : '';
+  const isFavorite = Number(song.fav) === 1;
+  const favBtn = `<button class="btn-icon-sm fav-btn ${isFavorite ? 'active' : ''}" title="${isFavorite ? 'Remove from favourites' : 'Add to favourites'}" onclick="fav(${song.id}, this)">
+      ${isFavorite ? '♥' : '♡'}
+     </button>`;
 
-  const editBtn = !showFav
+  const editBtn = context === 'library'
     ? `<button class="btn-icon-sm edit-btn" title="Edit song" onclick="openEditModal('${song.id}', '${escAttr(song.title)}', '${escAttr(song.artist || '')}', '${escAttr(song.url || '')}')">✎</button>`
     : '';
 
-  const deleteBtn = !showFav
+  const deleteBtn = context === 'library'
     ? `<button class="btn-icon-sm delete-btn" title="Delete song" onclick="deleteSong(${song.id})">🗑</button>`
     : '';
 
@@ -205,12 +236,27 @@ function playYouTube(link, title = '', artist = '') {
 
 /* ─── Add to Favourites ─────────────────────────── */
 function fav(id, btn) {
-  if (btn) { btn.disabled = true; btn.textContent = '✅'; }
+  if (btn) btn.disabled = true;
   fetch(`/favorite/${id}`)
-    .then(() => showToast('♥ Marked as favourite!', 'success'))
+    .then(res => res.json())
+    .then(data => {
+      const isFavorite = Number(data.fav) === 1;
+      if (btn) {
+        btn.textContent = isFavorite ? '♥' : '♡';
+        btn.title = isFavorite ? 'Remove from favourites' : 'Add to favourites';
+        btn.classList.toggle('active', isFavorite);
+      }
+      showToast(data.message, 'success');
+      loadLibrary();
+      if (!document.getElementById('panel-favorites').classList.contains('hidden')) {
+        loadFavorites();
+      }
+    })
     .catch(() => {
       showToast('Failed.', 'error');
-      if (btn) { btn.disabled = false; btn.textContent = '♡'; }
+    })
+    .finally(() => {
+      if (btn) btn.disabled = false;
     });
 }
 
